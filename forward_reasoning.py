@@ -1,59 +1,72 @@
-import sys
-import utils
+import parsers
+import binding
 
 
-def and_satisfied(and_args, facts):
+def and_satisfied(and_args, predicates, bindings):
     for arg in and_args:
-        if not satisfied(arg, facts):
-            return False
-    return True
+        is_satisfied, bindings = satisfy(arg, predicates, bindings)
+        # print("        and_satisfied", arg, is_satisfied, bindings)
+        if not is_satisfied:
+            return False, bindings
+    return True, bindings
 
 
-def or_satisfied(and_args, facts):
+def or_satisfied(and_args, predicates, bindings):
     '''At least 1 arg has to be satisfied'''
     for arg in and_args:
-        if satisfied(arg, facts):
-            return True
-    return False
+        is_satisfied, extended_bindings = satisfy(arg, predicates, bindings)
+        if is_satisfied:
+            return True, extended_bindings
+    return False, bindings
 
 
-def satisfied(cond, facts):
-    '''Can we satisfy the condition?  A condition is either a fact or a list.
-    Lists have the form [and cond cond cond ...], [or cond cond cond ...], or [cond]'''
-    if type(cond) == type([]): # The condition is a list
-        if len(cond) == 0: # []
-            return False
-        if cond[0] == 'and': # [and, fact_or_list1, fact_or_list2, ...]
-            return and_satisfied(cond[1:], facts)
-        if cond[0] == 'or': # [or, fact_or_list1, fact_or_list2, ...]
-            return or_satisfied(cond[1:], facts)
-        return satisfied(cond[0], facts) # [fact_or_list1, ...] but only first one matters
-    return cond in facts # A condition is either a list or a fact
+def satisfy(cond, predicates, bindings):
+    '''Can we satisfy the condition in the given context?  A condition is always list.
+    Lists have the form [Predicate relation objects ...] [and cond cond cond ...], [or cond cond cond ...], or [cond]'''
+    assert type(cond) == type([]) # all conditions are lists
+    if len(cond) == 0: # []
+        return False, None
+    if cond[0] == 'and': # [and, list1, list2, ...]
+        return and_satisfied(cond[1:], predicates, bindings)
+    if cond[0] == 'or': # [or, ist1, list2, ...]
+        return or_satisfied(cond[1:], predicates, bindings)
+    if type(cond[0]) == type(""): # Predicate [relation, object1, object2, ...]
+        return binding.is_in_predicates(cond, predicates, bindings)
+    assert type(cond[0]) == type([]) # [[...]]
+    return satisfy(cond[0], predicates, bindings) # [list1, ...] but only first one matters
+            
+
+def apply_rules(predicates, rules):
+    '''apply rules and return true if predicates get changed'''
+    # print("apply_rules", "predicates", predicates, "rules", rules)
+    predicates_changed = False
+    for condition, conclusion in rules:
+        is_satisfied, bindings = satisfy(condition, predicates, [{}]) # [{}] is one empty binding
+        # bindings is a list of dicts. Each dict is an alternative binding        
+        # print("    condition", condition, "is_satisfied", is_satisfied, "bindings", bindings, "predicates", predicates)
+        if is_satisfied:
+            for b in bindings:
+                bounded_predicate = binding.apply_binding(conclusion, b)
+                if bounded_predicate not in predicates:
+                    # print("        add bounded_predicate", bounded_predicate)
+                    predicates.append(bounded_predicate)
+                    predicates_changed = True
+    return predicates_changed
 
 
-def apply_rules(facts, rules):
-    '''apply rules and return true if facts get changed'''
-    facts_changed = False
-    for rule in rules:
-        if satisfied(rule[0], facts):
-            if rule[1] not in facts:
-                facts.add(rule[1])
-                facts_changed = True
-    return facts_changed
-
-
-def run_forward_reasoning(facts, rules):
-    while apply_rules(facts, rules):
+def run_forward_reasoning(predicates, rules):
+    while apply_rules(predicates, rules):
         pass
 
 
 def run():
-    input_facts_file = "input_facts.txt"
+    input_predicates_file = "input_predicates.txt"
     rules_file = "rules.txt"
-    output_facts_file = "output_facts.txt"
-    facts = utils.read_facts(input_facts_file)
-    rules = utils.read_rules(rules_file)
-    run_forward_reasoning(facts, rules)
-    utils.write_facts(facts, output_facts_file)
+    output_predicates_file = "output_predicates.txt"
+    predicates = parsers.read_predicates(input_predicates_file)
+    rules = parsers.read_rules(rules_file)
+    run_forward_reasoning(predicates, rules)
+    parsers.write_predicates(predicates, output_predicates_file)
 
-run()
+if True:
+    run()
