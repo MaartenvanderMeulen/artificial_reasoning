@@ -21,7 +21,7 @@ def satisfied(cond, facts):
     '''Can we satisfy the condition?  A condition is either a fact or a list.
     Lists have the form [and cond cond cond ...], [or cond cond cond ...], or [cond]'''
     if type(cond) == type([]): # The condition is a list
-        if len(cond) == 0: # [] 
+        if len(cond) == 0: # []
             return False
         if cond[0] == 'and': # [and, fact_or_list1, fact_or_list2, ...]
             return and_satisfied(cond[1:], facts)
@@ -47,11 +47,13 @@ def run_forward_reasoning(facts, rules):
         pass
 
 
-if __name__ == "__main__":
-    input_facts_file = "input_facts.txt" if len(sys.argv) <= 1 else sys.argv[1]
-    rules_file = "rules.txt" if len(sys.argv) <= 2 else sys.argv[2]
-    output_facts_file = "output_facts.txt" if len(sys.argv) <= 3 else sys.argv[3]
+def run():
+    input_facts_file = "input_facts.txt"
+    rules_file = "rules.txt"
+    output_facts_file = "output_facts.txt"
     facts = utils.read_facts(input_facts_file)
     rules = utils.read_rules(rules_file)
     run_forward_reasoning(facts, rules)
     utils.write_facts(facts, output_facts_file)
+
+run()
