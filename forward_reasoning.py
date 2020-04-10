@@ -46,10 +46,11 @@ def apply_rules(predicates, rules):
         # print("    condition", condition, "is_satisfied", is_satisfied, "bindings", bindings, "predicates", predicates)
         if is_satisfied:
             for b in bindings:
-                bounded_predicate = binding.apply_binding(conclusion, b)
-                if bounded_predicate not in predicates:
+                predicate = binding.apply_binding(conclusion, b)
+                count_unbounded_objects = sum([1 for x in predicate[1:] if x[0] == "_"])
+                if count_unbounded_objects == 0 and predicate not in predicates:
                     # print("        add bounded_predicate", bounded_predicate)
-                    predicates.append(bounded_predicate)
+                    predicates.append(predicate)
                     predicates_changed = True
     return predicates_changed
 
