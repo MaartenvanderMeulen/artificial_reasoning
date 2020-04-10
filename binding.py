@@ -34,22 +34,29 @@ def add_binding(binding, extra_binding, new_bindings):
         new_bindings.append(result)
     
         
-def is_in_predicates(this_predicate, predicates, current_bindings):
-    # print("            is_in_predicates start this_predicate", this_predicate, "predicates", predicates, "current_bindings", current_bindings)
+def is_in_predicates(this_predicate, predicates, current_bindings):    
+    debug = False
+    if debug:
+        print("            is_in_predicates start this_predicate", this_predicate, "predicates", predicates, "current_bindings", current_bindings)
     found = False
     new_bindings = [{}]
     for binding in current_bindings:
         this_bounded_predicate = apply_binding(this_predicate, binding)
-        # print("            this_bounded_predicate", this_bounded_predicate, "binding", binding)
+        if debug:
+            print("            this_bounded_predicate", this_bounded_predicate, "binding", binding)
         for some_predicate in predicates:
             if this_bounded_predicate[0] == some_predicate[0]:
-                assert len(this_bounded_predicate) == len(some_predicate)
+                working_copy = list(this_bounded_predicate)
+                assert len(working_copy) == len(some_predicate)
                 extra_binding = dict()
                 match = True
-                for i in range(1, len(this_bounded_predicate)):
-                    if this_bounded_predicate[i][0] == "_": # unbounded variable
-                        extra_binding[this_bounded_predicate[i]] = some_predicate[i]
-                    elif this_bounded_predicate[i] != some_predicate[i]:
+                for i in range(1, len(working_copy)):
+                    if working_copy[i][0] == "_": # unbounded variable
+                        extra_binding[working_copy[i]] = some_predicate[i]
+                        working_copy = apply_binding(this_predicate, {working_copy[i]: some_predicate[i]})
+                        if debug:
+                            print("            working copy after temp binding", working_copy)
+                    elif working_copy[i] != some_predicate[i]:
                         match = False
                         break
                 if not match:
@@ -57,7 +64,8 @@ def is_in_predicates(this_predicate, predicates, current_bindings):
                 found = True
                 if len(extra_binding) > 0:
                     add_binding(binding, extra_binding, new_bindings)                    
-    # print("            is_in_predicates end. found", found, "new_bindings", new_bindings)
+    if debug:
+        print("            is_in_predicates end. found", found, "new_bindings", new_bindings)
     return found, new_bindings
 
 
