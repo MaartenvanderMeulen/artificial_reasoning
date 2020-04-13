@@ -130,3 +130,5 @@ dmypy.json
 
 # ignore everything that starts with tmp
 **/tmp*
+tmp*
+tmp*/
