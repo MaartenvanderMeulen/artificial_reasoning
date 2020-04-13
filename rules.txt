@@ -1,6 +1,1 @@
-if Waar(a) and Waar(c) then Waar(d)
-if Waar(b) and Waar(d) then Waar(e)
-if Eigenaar(_x, _y) and Bestaat(_z) then Kan_overdragen(_x, _y, _z)
-if P(_x, _y) then R(_y)
-if P(_x, _y) and Q(_x, _z) then S(_y)
-if P(_x, _x) then T(_x)
+if (P(_x, _y) or Q(_x, _y)) and (R(_x, _z) or S(_x, _z)) then T(_x, _y, _z)
